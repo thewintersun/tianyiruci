@@ -8,33 +8,21 @@ AEFG1:(XA_4-REF(XA_4,1))/REF(XA_4,1)*100;
 AEFG2:MA(AEFG1,2),COLORYELLOW,LINETHICK3;
 AEFG3:MA(AEFG1,1),COLORMAGENTA,LINETHICK3;
 '''
-
-'''
-本程序主要是使用价格EMA指数平均线，来辅助判断雪球组合"无脑小市值3-14"的加减仓时机。
-从绘制的曲线的金叉和死叉来判断加减仓，
-因为组合策略长期都是上涨趋势，所以死叉减仓的点位不太准确，金叉的加仓时机点感觉还行。
-
-数据的weekly是周收益， daily是日收益的历史数据， 
-其中可以看出weekly的收益在经过一段时间下跌，只要有反弹就表示已经反转。 
-
-此代码仅供参考。
-
-'''
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import talib
 import numpy as np
 
 
-if __name__ == '__main__':
+def show(ema_days=3, calc_daily=True):
     # daily
     weekly = [0.00, 8.01, 10.22, 5.81, 11.31, 12.61, 11.26, 11.98, 11.80, 5.92, 4.30, 1.20, 4.66,
               15.96, 13.26, 19.26, 21.03, 25.12, 25.00, 28.66, 29.20, 29.50, 24.04, 21.81, 27.65,
               27.46, 31.09, 36.64, 39.02, 37.86, 39.84, 44.57, 42.97, 40.77, 44.29, 40.22, 38.01,
               36.48, 30.65, 33.27, 35.56, 37.27, 40.16, 40.99, 41.78, 42.77, 45.22, 41.10, 52.32,
               55.00, 55.91, 56.61]
-    daily = [261.94, 272.54, 272.88, 270.40, 272.37, 273.89, 268.81, 267.45, 269.85, 272.58, 270.51,
+    daily = [261.89, 261.39, 253.77, 247.84, 253.45, 261.94, 272.54, 272.88, 270.40, 272.37, 273.89,
+             268.81, 267.45, 269.85, 272.58, 270.51,
             275.84, 281.01, 280.38, 285.92, 289.64, 296.48, 297.06, 296.50, 297.10, 298.43, 297.65,
             301.61, 303.41, 308.48, 310.29, 308.17, 298.52, 300.04, 301.64, 303.91, 304.94, 304.26,
             305.77, 305.68, 311.30, 316.10, 317.21, 319.50, 319.51, 310.17, 315.73, 320.74, 314.87,
@@ -45,17 +33,21 @@ if __name__ == '__main__':
             309.17, 306.72, 307.78, 308.51, 308.06, 309.91, 309.11, 302.78, 305.11, 302.75, 302.08,
             311.40, 319.36, 316.80, 321.53, 316.58, 314.29, 324.41, 323.88, 324.49, 322.96, 321.39,
             318.10, 313.07, 309.44, 303.67, 320.25, 320.85, 329.99, 342.01, 344.49, 349.47, 346.15,
-            347.21, 349.76, 350.11, 351.47, 347.33, 350.78, 352.42, 354.45, ]
+            347.21, 349.76, 350.11, 351.47, 347.33, 350.78, 352.42, 354.45, 357.34]
 
-    xa_1 = daily
+    if calc_daily:
+        xa_1 = daily
+    else:
+        xa_1 = weekly
+        ema_days = 3
 
-    xa_2 = talib.EMA(np.array(xa_1), 3)
+    xa_2 = talib.EMA(np.array(xa_1), ema_days)
     xa_2 = np.nan_to_num(xa_2)
 
-    xa_3 = talib.EMA(np.array(xa_2), 3)
+    xa_3 = talib.EMA(np.array(xa_2), ema_days)
     xa_3 = np.nan_to_num(xa_3)
 
-    xa_4 = talib.EMA(np.array(xa_3), 3)
+    xa_4 = talib.EMA(np.array(xa_3), ema_days)
     xa_4 = np.nan_to_num(xa_4)
 
     '''
@@ -63,8 +55,8 @@ if __name__ == '__main__':
     AEFG2:MA(AEFG1,2),COLORYELLOW,LINETHICK3;
     AEFG3:MA(AEFG1,1),COLORMAGENTA,LINETHICK3;
     '''
-    AEFG1 = [0.0, 0.0, 0.0]
-    for i in range(3, len(xa_4)):
+    AEFG1 = [0.0] * ema_days
+    for i in range(ema_days, len(xa_4)):
         v = ((xa_4[i] - xa_4[i-1]) / xa_4[i-1]) * 100
         AEFG1.append(v)
 
@@ -75,13 +67,20 @@ if __name__ == '__main__':
 
     x = range(1, len(xa_1) + 1)
 
+    start_index = ema_days + 20
     plt.subplot(2, 1, 1)
     # basic line
-    plt.plot(x[10:], xa_1[10:], label="basic")
+    plt.plot(x[start_index:], xa_1[start_index:], label="basic")
 
     plt.subplot(2, 1, 2)
-    plt.plot(x[10:], AEFG2[10:], label="AEFG2")
-    plt.plot(x[10:], AEFG3[10:], label="AEFG3")
+    plt.plot(x[start_index:], AEFG2[start_index:], label="AEFG2")
+    plt.plot(x[start_index:], AEFG3[start_index:], label="AEFG3")
 
     plt.show()
 
+
+if __name__ == '__main__':
+    show(3)
+    show(5)
+    show(10)
+    show(3, False)
